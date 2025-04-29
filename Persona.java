@@ -87,6 +87,16 @@
         // Breakpoint para observar cambio de ciudad
     }
 
+    // Método para mostrar toda la información actual
+    public void mostrarInfo() {
+        System.out.println("--- Información de la persona ---");
+        System.out.println("Nombre: " + nombre);
+        System.out.println("Edad: " + edad);
+        System.out.println("Altura: " + altura + " metros");
+        System.out.println("Ciudad: " + ciudad);
+        // Breakpoint útil para ver todos los atributos juntos
+    }
+
     // Método principal para ejecutar el programa
     public static void main(String[] args) {
         Persona alumno = new Persona("José Antonio", 29, 1.75, "Madrid");
@@ -98,6 +108,7 @@
         alumno.cambiarNombre("Antonio José");
         alumno.actualizarAltura(1.78);
         alumno.cambiarCiudad("Barcelona");
+        alumno.mostrarInfo();
         alumno.saludar();
     }
 }
