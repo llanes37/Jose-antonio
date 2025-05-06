@@ -10,7 +10,7 @@
 import java.io.*; // Importamos todas las clases necesarias para trabajar con archivos
 import java.util.Scanner; // Importamos Scanner para entrada de datos por teclado
 
-public class EjercicioFacilArchivos {
+public class EjercicioFacilArchivos1 {
 
     public static void main(String[] args) {
 
