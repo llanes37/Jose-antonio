@@ -1,4 +1,5 @@
 import java.io.*; // Importamos todas las clases para trabajar con archivos
+import java.util.Scanner;
 
 public class EjercicioFacilArchivos {
 
@@ -8,28 +9,31 @@ public class EjercicioFacilArchivos {
         // 1. ESCRIBIR UN ARCHIVO .TXT
         // ----------------------------
 
+      
         try {
-            // FileWriter permite escribir texto en un archivo
+            Scanner sc = new Scanner(System.in); // Creamos un lector desde teclado
+
+            System.out.print("Introduce tu edad: ");
+            int edad = sc.nextInt(); // Leemos la edad como número
+
             FileWriter fw = new FileWriter("nombres.txt");
+            BufferedWriter bw = new BufferedWriter(fw);
 
-            // PrintWriter facilita escribir línea a línea
-            PrintWriter pw = new PrintWriter(fw);
+            // Escribimos según la edad introducida
+            if (edad >= 18) {
+                bw.write("El usuario es mayor de edad.");
+            } else {
+                bw.write("El usuario es menor de edad.");
+            }
+           
+            bw.close(); // Cerramos archivo
 
-            // Escribimos nombres, cada uno en una línea
-            pw.println("María");
-            pw.println("Antonio");
-            pw.println("Lucía");
-            pw.println("Carlos");
-
-            // Cerramos para guardar los cambios
-            pw.close();
-
-            System.out.println("Archivo 'nombres.txt' creado y escrito con éxito.\n");
+            System.out.println("✅ Archivo 'nombres.txt' creado con el resultado de la edad.");
 
         } catch (IOException e) {
-            // Si hay error al escribir
             System.out.println("❌ Error al escribir en el archivo.");
         }
+    
 
         // ----------------------------
         // 2. LEER EL ARCHIVO .TXT

@@ -1,4 +1,1 @@
-María
-Antonio
-Lucía
-Carlos
+El usuario es menor de edad.
