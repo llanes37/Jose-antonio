@@ -230,60 +230,24 @@ public class EjercicioFacilArchivos1 {
         }
     }
 
-    // ---------------------------------------------------------------------------
+
+        // ---------------------------------------------------------------------------
     // 🧪 PRUEBA FINAL: LEER ALUMNOS Y ANALIZAR MEJOR Y PEOR NOTA
     // ---------------------------------------------------------------------------
+    // * Programa Java que lea el contenido completo del fichero "alumnos.txt"
+    // * Formato de cada línea: nombreCompleto;nota;repetidor
+    // * Debe mostrar en consola cada línea tal cual aparece en el archivo
+    // * Además, debe determinar:
+    //   - Nombre completo del alumno con la MEJOR nota
+    //   - Nombre completo del alumno con la PEOR nota
+    // * En ambos casos, indicar también si el alumno es repetidor (true/false)
+    // * Sugerencia:
+    //   - Inicializa la variable de mejor nota con Double.MIN_VALUE
+    //   - Inicializa la variable de peor nota con Double.MAX_VALUE
+    //   - Usa BufferedReader para leer y String.split(";") para parsear cada línea
+
     public static void ejercicioFinal() {
-        try {
-            BufferedReader br = new BufferedReader(new FileReader("alumnos.txt"));
-            String linea;                                    // 📜 Línea con datos de un alumno
-
-            // Inicializamos seguimiento de mejor y peor nota
-            String mejorAlumno = "";
-            double mejorNota = Double.MIN_VALUE;
-            boolean mejorRepetidor = false;
-
-            String peorAlumno = "";
-            double peorNota = Double.MAX_VALUE;
-            boolean peorRepetidor = false;
-
-            System.out.println("📘 Leyendo archivo 'alumnos.txt':");
-            // 🔄 Leemos hasta el final
-            while ((linea = br.readLine()) != null) {
-                System.out.println("- " + linea);             // 📄 Mostramos línea cruda
-                String[] partes = linea.split(";");          // ✂️ Separamos por ‘;’
-                String nombre = partes[0];                   // 📋 Nombre completo
-                double nota = Double.parseDouble(partes[1]); // 🔢 Nota numérica
-                boolean repetidor = Boolean.parseBoolean(partes[2]); // 🔀 Estado repetidor
-
-                // 📈 Actualizamos mejor alumno
-                if (nota > mejorNota) {
-                    mejorNota = nota;
-                    mejorAlumno = nombre;
-                    mejorRepetidor = repetidor;
-                }
-                // 📉 Actualizamos peor alumno
-                if (nota < peorNota) {
-                    peorNota = nota;
-                    peorAlumno = nombre;
-                    peorRepetidor = repetidor;
-                }
-            }
-            br.close();                                      // ✅ Cerramos flujo
-
-            // 🏅 Resultados finales
-            System.out.println("\n🏅 Alumno con MEJOR nota:");
-            System.out.println("👨‍🎓 Nombre: " + mejorAlumno);
-            System.out.println("📈 Nota: " + mejorNota);
-            System.out.println("🔁 Repetidor: " + mejorRepetidor);
-
-            System.out.println("\n❗ Alumno con PEOR nota:");
-            System.out.println("👨‍🎓 Nombre: " + peorAlumno);
-            System.out.println("📉 Nota: " + peorNota);
-            System.out.println("🔁 Repetidor: " + peorRepetidor);
-
-        } catch (IOException e) {
-            System.out.println("❌ Error al leer el archivo de alumnos: " + e.getMessage());
-        }
+        // TODO: Implementa aquí la lógica siguiendo el enunciado anterior.
     }
+
 }
