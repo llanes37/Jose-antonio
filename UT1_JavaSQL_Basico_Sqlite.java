@@ -196,20 +196,17 @@
          }
          try {
              // Solicita al usuario el nombre y la edad para el registro
-             System.out.print("👉 Ingrese el nombre: ");
-             String nombre = scanner.next(); // Lee el nombre ingresado
-             System.out.print("👉 Ingrese la edad: ");
-             int edad = readInt(scanner); // Lee la edad de forma segura
+            
              
              // Define la sentencia SQL para insertar el registro
              String sqlInsert = "INSERT INTO usuarios (nombre, edad) VALUES (?, ?)";
              // Prepara la sentencia usando PreparedStatement para mayor seguridad
              PreparedStatement pstmt = conexion.prepareStatement(sqlInsert);
-             pstmt.setString(1, nombre); // Asigna el valor del nombre al primer parámetro
-             pstmt.setInt(2, edad);      // Asigna el valor de la edad al segundo parámetro
+             pstmt.setString(1, "joaquin"); // Asigna el valor del nombre al primer parámetro
+             pstmt.setInt(2, 31);      // Asigna el valor de la edad al segundo parámetro
              // Ejecuta la sentencia y obtiene el número de filas afectadas
-             int filasAfectadas = pstmt.executeUpdate();
-             System.out.println("✅ Registro insertado. Filas afectadas: " + filasAfectadas);
+            pstmt.executeUpdate();
+             
              pstmt.close(); // Cierra el PreparedStatement para liberar recursos
          } catch (SQLException e) {
              System.out.println("❌ Error al insertar el registro: " + e.getMessage());
@@ -280,34 +277,17 @@
          
          try {
              // -----------------------------
-             // Sección de Actualización (UPDATE)
-             // -----------------------------
-             System.out.print("👉 Ingrese el ID del usuario a actualizar: ");
-             int idActualizar = readInt(scanner); // Lee el ID del usuario a actualizar
-             System.out.print("👉 Ingrese el nuevo nombre: ");
-             String nuevoNombre = scanner.next();  // Lee el nuevo nombre del usuario
-             
-             // Define la sentencia SQL para actualizar el nombre en la tabla 'usuarios'
-             String sqlUpdate = "UPDATE usuarios SET nombre = ? WHERE id = ?";
-             // Prepara la sentencia para evitar inyecciones SQL
-             PreparedStatement pstmtUpdate = conexion.prepareStatement(sqlUpdate);
-             pstmtUpdate.setString(1, nuevoNombre); // Asigna el nuevo nombre al parámetro 1
-             pstmtUpdate.setInt(2, idActualizar);     // Asigna el ID del usuario al parámetro 2
-             // Ejecuta la actualización y obtiene el número de filas afectadas
-             int filasActualizadas = pstmtUpdate.executeUpdate();
-             System.out.println("✅ Registros actualizados: " + filasActualizadas);
-             pstmtUpdate.close(); // Cierra el PreparedStatement
+           
              
              // -----------------------------
              // Sección de Eliminación (DELETE)
              // -----------------------------
-             System.out.print("👉 Ingrese el ID del usuario a eliminar: ");
-             int idEliminar = readInt(scanner); // Lee el ID del usuario a eliminar
+          
              
              // Define la sentencia SQL para eliminar el registro de la tabla 'usuarios'
              String sqlDelete = "DELETE FROM usuarios WHERE id = ?";
              PreparedStatement pstmtDelete = conexion.prepareStatement(sqlDelete);
-             pstmtDelete.setInt(1, idEliminar); // Asigna el ID al parámetro de la sentencia
+             pstmtDelete.setInt(1, 1); // Asigna el ID al parámetro de la sentencia
              // Ejecuta la eliminación y obtiene el número de filas afectadas
              int filasEliminadas = pstmtDelete.executeUpdate();
              System.out.println("✅ Registros eliminados: " + filasEliminadas);
