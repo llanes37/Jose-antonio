@@ -109,7 +109,7 @@ public class ProyectoJDBC_Complete {
             // 📦 Cargar driver SQLite
             Class.forName("org.sqlite.JDBC");
             // 🔌 Conectar (o crear) archivo miBaseDatos.db
-            conexion = DriverManager.getConnection("jdbc:sqlite:miBaseDatos.db");
+            conexion = DriverManager.getConnection("jdbc:sqlite:joaquin.db");
             System.out.println("✅ Conexión establecida en 'miBaseDatos.db'.");
         } catch (ClassNotFoundException e) {
             System.out.println("❌ Driver no encontrado: " + e.getMessage());

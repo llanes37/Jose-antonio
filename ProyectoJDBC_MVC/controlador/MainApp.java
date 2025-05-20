@@ -58,7 +58,7 @@ public class MainApp {
 
                         System.out.print("Edad: ");
                         int edad = Integer.parseInt(sc.nextLine());  // Leer edad
-
+                        
                         dao.insertar(new Usuario(0, nombre, edad));  // ID=0, se autogenera
                         System.out.println("✅ Usuario insertado.");
                     }
