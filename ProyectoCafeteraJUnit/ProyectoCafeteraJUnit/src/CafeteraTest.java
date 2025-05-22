@@ -1,3 +1,16 @@
+/******************************************************************************************
+ * 🧪 SECCIÓN 2: CLASE DE PRUEBAS UNITARIAS - CafeteraTest
+ * ----------------------------------------------------------------------------------------
+ * Esta clase prueba TODOS los métodos de la clase Cafetera de forma independiente.
+ * Utiliza las principales anotaciones de JUnit 5:
+ * - @Test → indica que es un caso de prueba
+ * - @BeforeEach → se ejecuta antes de cada test (preparación)
+ * - @AfterEach → se ejecuta después de cada test (limpieza)
+ * - @AfterAll → muestra mensaje tras finalizar todos los tests
+ ******************************************************************************************/
+
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 public class CafeteraTest {
     private Cafetera cafetera; // Objeto que se probará en cada test
 
@@ -109,3 +122,29 @@ public class CafeteraTest {
         System.out.println("✅ TODOS LOS TESTS DE CAFETERA FINALIZADOS CORRECTAMENTE ✅");
     }
 }
+    // 🧪 EJERCICIOS PARA PRACTICAR NUEVOS TESTS ------------------------------
+
+    // TODO: Crear un test llamado testAgregarCafeCasiLleno()
+    // 👉 Simula que la cafetera tiene 400 ml y le agregas 100 ml más
+    // 👉 Verifica que queda justo en 500 ml (capacidad máxima)
+
+    // TODO: Crear un test llamado testServirTazaExacta()
+    // 👉 Vacía la cafetera, agrega exactamente 300 ml
+    // 👉 Sirve una taza de 300 ml y comprueba que la cafetera queda en 0
+
+    // TODO: Crear un test llamado testServirTazaEnDosPasos()
+    // 👉 Agrega 200 ml, sirve 100, luego sirve 50
+    // 👉 Verifica que quedan 50 ml
+
+    // TODO: Crear un test llamado testAgregarCafeNegativo()
+    // 👉 Intenta agregar -50 ml y comprueba que no cambia la cantidad (debe ignorarse o lanzar excepción si modificas la clase)
+
+    // TODO: Crear un test llamado testConstructorCantidadNegativa()
+    // 👉 Si modificas la clase para permitir cantidadActual en el constructor, prueba qué pasa si se inicializa con negativo
+
+    // TODO: Crear un test llamado testCafeteraLlenaDesdeInicio()
+    // 👉 Verifica que tras llenar la cafetera con el método llenarCafetera(), siempre está en su capacidad máxima
+
+    // 📌 RECUERDA:
+    // Puedes guiarte de los tests ya escritos para copiar su estructura
+    // Cambia solo los valores y el nombre del test

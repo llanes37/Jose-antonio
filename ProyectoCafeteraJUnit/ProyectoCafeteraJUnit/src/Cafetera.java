@@ -102,16 +102,4 @@ public class Cafetera {
     }
 }
 
-/******************************************************************************************
- * 🧪 SECCIÓN 2: CLASE DE PRUEBAS UNITARIAS - CafeteraTest
- * ----------------------------------------------------------------------------------------
- * Esta clase prueba TODOS los métodos de la clase Cafetera de forma independiente.
- * Utiliza las principales anotaciones de JUnit 5:
- * - @Test → indica que es un caso de prueba
- * - @BeforeEach → se ejecuta antes de cada test (preparación)
- * - @AfterEach → se ejecuta después de cada test (limpieza)
- * - @AfterAll → muestra mensaje tras finalizar todos los tests
- ******************************************************************************************/
 
-import org.junit.jupiter.api.*;
-import static org.junit.jupiter.api.Assertions.*;
