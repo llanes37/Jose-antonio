@@ -51,9 +51,16 @@ WHERE email LIKE '%@gmail.com';
 -- 5️⃣ FILTRADO CON IN
 -- -----------------------------------------------------
 -- * Obtener empleados de departamentos 1 (Ventas) o 2 (IT).
-SELECT nombre, departamento_id
+SELECT 
+  nombre, 
+  departamento_id
 FROM empleados
-WHERE departamento_id IN (1, 2);
+WHERE 
+  departamento_id = 1                          -- Filtramos solo el departamento 1
+  AND nombre LIKE 'A%';                        -- Nombre que comienza por 'A'
+
+-- ⚠️ Si tu collation distingue mayúsculas/minúsculas y quieres incluir 'a' minúscula:
+-- AND LOWER(nombre) LIKE 'a%';
 
 -- ? Modifica la lista de IDs para practicar con otros departamentos.
 
@@ -96,18 +103,54 @@ GROUP BY departamento_id;
 
 
 -- -----------------------------------------------------
--- 9️⃣ JOIN ENTRE TABLAS
--- -----------------------------------------------------
--- * Unir empleados con nombres de sus departamentos.
-SELECT e.nombre      AS empleado,
-       d.nombre      AS departamento
-FROM empleados AS e
-LEFT JOIN departamentos AS d
-  ON e.departamento_id = d.id;
+-- 🔗 Consulta: Unir empleados con nombres de sus departamentos
+SELECT 
+  e.nombre      AS empleado,         -- Selecciona el nombre de la tabla 'empleados' y lo etiqueta como 'empleado'
+  d.nombre      AS departamento      -- Selecciona el nombre de la tabla 'departamentos' y lo etiqueta como 'departamento'
+FROM empleados AS e                   -- Fuente principal: tabla 'empleados' con alias 'e'
+LEFT JOIN departamentos AS d          -- LEFT JOIN para incluir todos los empleados, incluso sin departamento
+  ON e.departamento_id = d.id;        -- Condición de unión: el campo 'departamento_id' de 'empleados' debe coincidir con 'id' de 'departamentos'
 
--- ? Cambia LEFT JOIN por INNER JOIN y observa la diferencia.
+-- 🔗 Consulta: Empleados con departamento válido (INNER JOIN)
+SELECT 
+  e.nombre      AS empleado,         -- Nombre del empleado
+  d.nombre      AS departamento      -- Nombre del departamento
+FROM empleados AS e                   -- Tabla principal
+INNER JOIN departamentos AS d         -- INNER JOIN para excluir empleados sin departamento
+  ON e.departamento_id = d.id;        -- Solo filas donde exista coincidencia en ambas tablas
 
 
 -- #############################################
 -- ✅ FIN BLOQUE 03: SELECT Y LÓGICA
 -- #############################################
+-- #############################################
+-- 🧩 BLOQUE 03: EJERCICIOS SELECT Y LÓGICA
+-- #############################################
+
+-- 1️⃣ Listar empleados bien pagados
+--    Muestra el nombre y salario de todos los empleados que cobran más de 1500 €, 
+--    ordenados de mayor a menor salario.
+
+-- 2️⃣ Buscar clientes de Gmail
+--    Devuelve nombre y email de los clientes cuyo correo sea de dominio '@gmail.com'.
+
+-- 3️⃣ Empleados de 'Ventas' con 'A'
+--    Selecciona el nombre de los empleados que pertenezcan al departamento Ventas (id=1)
+--    y cuyo nombre empiece por la letra 'A'.
+
+-- 4️⃣ Etiqueta de antigüedad
+--    Muestra nombre, fecha_alta y una etiqueta de antigüedad:
+--      - 'Nuevo' si lleva < 1 año
+--      - 'Intermedio' si lleva entre 1 y 3 años
+--      - 'Veterano' si lleva > 3 años
+--    Usa CASE y la función CURDATE(), ordena por fecha_alta ascendente.
+
+-- 5️⃣ Salario medio por departamento
+--    Para cada departamento_id muestra:
+--      - total_empleados (COUNT)
+--      - salario_medio (AVG)
+--    Incluye solo aquellos departamentos con al menos 2 empleados (HAVING).
+
+-- 6️⃣ Empleado + Departamento
+--    Devuelve la lista de todos los empleados junto con el nombre de su departamento.
+--    Incluye también los empleados que no tienen departamento asignado (LEFT JOIN).
