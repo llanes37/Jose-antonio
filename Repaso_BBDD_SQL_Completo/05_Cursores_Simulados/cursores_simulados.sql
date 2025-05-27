@@ -3,25 +3,53 @@
 -- #############################################################
 
 /*
-📘 TEORÍA DE CURSORES
+📘 TEORÍA COMPLETA DE CURSORES EN SQL
 
-1. ¿Qué es un cursor?
-   - Mecanismo que permite procesar fila a fila los resultados de una consulta.
-   - Se usa cuando necesitas lógica por registro (actualizaciones, validaciones…).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. ¿QUÉ ES UN CURSOR?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Un **cursor** es una estructura que permite **recorrer los resultados de una consulta fila a fila**, como si fuese un bucle sobre un conjunto de datos.
 
-2. Simulación en SQLite / SQL puro:
-   - No hay cursores nativos: usamos SELECT con ORDER BY, LIMIT y CASE.
-   - El procesamiento fila a fila se realiza externamente (Java: while(rs.next()), Python: for row in cursor).
+Se usa cuando necesitas aplicar **lógica individual** sobre cada registro:
+- Validar datos uno a uno
+- Aplicar actualizaciones condicionales
+- Acumular cálculos en variables
+- Generar auditorías, informes o estadísticas complejas
 
-3. Cursores reales en MySQL:
-   - Definidos dentro de procedimientos con DECLARE CURSOR, OPEN, FETCH y handlers.
-   - Permiten lógica imperativa y bucles controlados (LOOP).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. CURSORES SIMULADOS (SQL “PLANO” y SQLite)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+En sistemas como SQLite (y también en MySQL, si no se usa procedural), simulamos el recorrido fila a fila con consultas como:
 
-4. ¿Cuándo usar cursores?
-   - Cálculos complejos por registro.
-   - Transformaciones paso a paso.
-   - Integridad de datos en procesos ETL pequeños.
-*/
+✅ SELECT con `ORDER BY`: simula cómo leería el cursor
+✅ `LIMIT`, `OFFSET`: simulan el control de lectura paso a paso
+✅ `CASE`: permite aplicar lógica fila a fila (como IF/ELSE)
+
+📌 Se complementa en código externo:  
+– Java: `while (rs.next()) { ... }`  
+– Python: `for row in cursor: ...`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. CURSORES REALES EN MYSQL (PROGRAMACIÓN PROCEDURAL)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MySQL sí permite cursores reales, dentro de procedimientos almacenados.
+
+📐 Estructura básica:
+
+```sql
+DECLARE cursor_nombre CURSOR FOR
+    SELECT ... FROM ...;
+
+DECLARE CONTINUE HANDLER FOR NOT FOUND
+    SET variable_fin = TRUE;
+
+OPEN cursor_nombre;
+REPEAT
+    FETCH cursor_nombre INTO variable1, variable2;
+    -- lógica por fila aquí
+UNTIL variable_fin END REPEAT;
+CLOSE cursor_nombre;
+
 
 -- -------------------------------------------------------------
 -- 1️⃣ SELECT ORDENADO COMO CURSOR SIMULADO
@@ -30,7 +58,15 @@
 SELECT id, nombre, salario
 FROM empleados
 ORDER BY salario DESC;
--- ✅ Simula OPEN + FETCH inicial de un cursor: el primer registro es el de mayor salario.
+
+-- 🔽 EN LA APLICACIÓN (MySQL Workbench):
+-- 1. Selecciona solo esta consulta (líneas 2 a 4).
+-- 2. Pulsa Ctrl + Enter para ejecutarla y ver los resultados en la tabla inferior.
+-- 3. Observa cómo aparecen ordenados de mayor a menor salario.
+-- 4. Explica que esto simula la lectura "fila a fila" que haría un cursor:
+--    - La primera fila sería la que leería primero el cursor.
+-- 5. Puedes repetirlo luego con ORDER BY ASC para mostrar lo contrario.
+
 
 -- -------------------------------------------------------------
 -- 2️⃣ TOP-N (LIMIT) COMO FETCH MÚLTIPLE
