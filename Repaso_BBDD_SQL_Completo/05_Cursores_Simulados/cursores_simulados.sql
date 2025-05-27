@@ -3,53 +3,70 @@
 -- #############################################################
 
 /*
-📘 TEORÍA COMPLETA DE CURSORES EN SQL
+📘 TEORÍA DE CURSORES
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. ¿QUÉ ES UN CURSOR?
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Un **cursor** es una estructura que permite **recorrer los resultados de una consulta fila a fila**, como si fuese un bucle sobre un conjunto de datos.
+1. ¿Qué es un cursor?
+   - Mecanismo que permite procesar fila a fila los resultados de una consulta.
+   - Se usa cuando necesitas lógica por registro (actualizaciones, validaciones…).
 
-Se usa cuando necesitas aplicar **lógica individual** sobre cada registro:
-- Validar datos uno a uno
-- Aplicar actualizaciones condicionales
-- Acumular cálculos en variables
-- Generar auditorías, informes o estadísticas complejas
+2. Simulación en SQLite / SQL puro:
+   - No hay cursores nativos: usamos SELECT con ORDER BY, LIMIT y CASE.
+   - El procesamiento fila a fila se realiza externamente (Java: while(rs.next()), Python: for row in cursor).
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-2. CURSORES SIMULADOS (SQL “PLANO” y SQLite)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-En sistemas como SQLite (y también en MySQL, si no se usa procedural), simulamos el recorrido fila a fila con consultas como:
+3. Cursores reales en MySQL:
+   - Definidos dentro de procedimientos con DECLARE CURSOR, OPEN, FETCH y handlers.
+   - Permiten lógica imperativa y bucles controlados (LOOP).
 
-✅ SELECT con `ORDER BY`: simula cómo leería el cursor
-✅ `LIMIT`, `OFFSET`: simulan el control de lectura paso a paso
-✅ `CASE`: permite aplicar lógica fila a fila (como IF/ELSE)
+4. ¿Cuándo usar cursores?
+   - Cálculos complejos por registro.
+   - Transformaciones paso a paso.
+   - Integridad de datos en procesos ETL pequeños.
+*/
+-- 1️⃣ Declaración del cursor y variables de control
 
-📌 Se complementa en código externo:  
-– Java: `while (rs.next()) { ... }`  
-– Python: `for row in cursor: ...`
+-- DECLARE cursor_nombre CURSOR FOR
+--   SELECT id, nombre, salario FROM empleados ORDER BY id;
+--   ↑ Define un cursor llamado `cursor_nombre` que recorrerá el resultado
+--     de la consulta especificada, fila a fila.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-3. CURSORES REALES EN MYSQL (PROGRAMACIÓN PROCEDURAL)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MySQL sí permite cursores reales, dentro de procedimientos almacenados.
+-- DECLARE CONTINUE HANDLER FOR NOT FOUND
+--   SET done = TRUE;
+--   ↑ Crea un “handler” que, cuando FETCH no encuentre más filas,
+--     establece la variable `done = TRUE` en lugar de abortar el SP.
 
-📐 Estructura básica:
+-- -------------------------------------------------------------
+-- 2️⃣ Abrir el cursor
 
-```sql
-DECLARE cursor_nombre CURSOR FOR
-    SELECT ... FROM ...;
+-- OPEN cursor_nombre;
+-- ↑ Inicia el cursor; lo sitúa en la primera fila del conjunto de resultados.
+--     A partir de este momento, podemos hacer FETCH para leer datos.
 
-DECLARE CONTINUE HANDLER FOR NOT FOUND
-    SET variable_fin = TRUE;
+-- -------------------------------------------------------------
+-- 3️⃣ Bucle de lectura con REPEAT…UNTIL
 
-OPEN cursor_nombre;
-REPEAT
-    FETCH cursor_nombre INTO variable1, variable2;
-    -- lógica por fila aquí
-UNTIL variable_fin END REPEAT;
-CLOSE cursor_nombre;
+-- REPEAT
+--   FETCH cursor_nombre INTO var_id, var_nom, var_salario;
+--   -- Lee la siguiente fila del cursor:
+--   --   - Si hay datos, los almacena en las variables var_id, var_nom, var_salario.
+--   --   - Si no hay más filas, el handler marca `done = TRUE`.
 
+--   IF NOT done THEN
+--     -- Aquí va la lógica que quieres aplicar a cada fila:
+--     -- por ejemplo, sumar, validar o actualizar.
+--     UPDATE empleados
+--       SET salario = var_salario * 1.05
+--     WHERE id = var_id;
+--   END IF;
+
+-- UNTIL done END REPEAT;
+-- ↑ Repite el FETCH y la lógica interna hasta que `done = TRUE`,
+--     es decir, hasta que no queden filas por procesar.
+
+-- -------------------------------------------------------------
+-- 4️⃣ Cerrar el cursor
+
+-- CLOSE cursor_nombre;
+-- ↑ Finaliza el uso del cursor y libera los recursos asociados.
 
 -- -------------------------------------------------------------
 -- 1️⃣ SELECT ORDENADO COMO CURSOR SIMULADO
@@ -93,38 +110,59 @@ ORDER BY salario ASC;
 -- ✅ Simula FETCH + lógica IF/ELSE interna en cada iteración.
 
 -- -------------------------------------------------------------
--- 4️⃣ CURSOR REAL DENTRO DE PROCEDIMIENTO (MySQL)
+-- 4️⃣ CURSOR REAL DENTRO DE PROCEDIMIENTO (MySQL) – EXPLICACIÓN LÍNEA A LÍNEA
 -- -------------------------------------------------------------
 DELIMITER $$
+
 CREATE PROCEDURE ProcesarEmpleados()
 BEGIN
+  -- 1. Declarar variable de control para detectar fin de datos
   DECLARE fin INT DEFAULT FALSE;
-  DECLARE emp_id INT;
-  DECLARE emp_nom VARCHAR(100);
-  DECLARE emp_sal DECIMAL(10,2);
-
-  -- Cursor para recorrer todos los empleados
+  
+  -- 2. Declarar variables para almacenar cada columna de la fila leída
+  DECLARE emp_id  INT;         -- Guardará el valor de la columna 'id'
+  DECLARE emp_nom VARCHAR(100);-- Guardará el valor de la columna 'nombre'
+  DECLARE emp_sal DECIMAL(10,2); -- Guardará el valor de la columna 'salario'
+  
+  -- 3. Definir el cursor que recorrerá todas las filas de empleados, ordenadas por id
   DECLARE cursor_emp CURSOR FOR
-    SELECT id, nombre, salario FROM empleados ORDER BY id;
-
-  -- Handler para detectar fin de datos
-  DECLARE CONTINUE HANDLER FOR NOT FOUND SET fin = TRUE;
-
+    SELECT id, nombre, salario
+      FROM empleados
+     ORDER BY id;
+  
+  -- 4. Definir un handler que, cuando FETCH no encuentre más filas, marque fin = TRUE
+  DECLARE CONTINUE HANDLER FOR NOT FOUND
+    SET fin = TRUE;
+  
+  -- 5. Abrir el cursor para iniciar la lectura
   OPEN cursor_emp;
+  
+  -- 6. Iniciar un bucle que se repetirá hasta que fin = TRUE
   bucle: LOOP
+    -- 6.1. Leer la siguiente fila del cursor y volcar sus valores en las variables
     FETCH cursor_emp INTO emp_id, emp_nom, emp_sal;
+    
+    -- 6.2. Si ya no hay más filas (fin = TRUE), salir del bucle
     IF fin THEN
       LEAVE bucle;
     END IF;
-    -- Ejemplo de procesamiento: aumentar salario un 5%
+    
+    -- 6.3. Lógica de procesamiento por cada fila leída:
+    --      en este ejemplo, aumentamos el salario un 5% usando el viejo valor
     UPDATE empleados
-    SET salario = emp_sal * 1.05
-    WHERE id = emp_id;
+       SET salario = emp_sal * 1.05
+     WHERE id = emp_id;
+    
+    -- 6.4. Al terminar, el LOOP vuelve a hacer FETCH de la siguiente fila
   END LOOP;
+  
+  -- 7. Cerrar el cursor y liberar recursos
   CLOSE cursor_emp;
 END $$
+
 DELIMITER ;
--- ✅ Ejecuta con: CALL ProcesarEmpleados();
+
+-- ✅ Para ejecutar: CALL ProcesarEmpleados();
 
 -- -------------------------------------------------------------
 -- 5️⃣ VERIFICACIÓN POST-PROCESO
