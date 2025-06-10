@@ -1,0 +1,1 @@
+Comparator.comparingInt(Alumno::getEdad)

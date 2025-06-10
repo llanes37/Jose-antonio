@@ -757,6 +757,130 @@ public static void opcionModificar() {
   // ❌ Si no se encontró el alumno
   System.out.println("⚠️ No se encontró ningún alumno con ese nombre.");
 }
+// ➕ Opción 11: Ejercicio UT06 – Arrays Básico (Suma, Media, Máximo y Mínimo)
+/*
+ 📌 Enunciado:
+   Crea un método que pida al usuario un número N (>0), genere un array de N enteros
+   con valores aleatorios entre 1 y 100, y luego calcule:
+     • La suma de todos los elementos.
+     • La media (double) de los valores.
+     • El valor máximo del array.
+     • El valor mínimo del array.
+   Por último, muestra por consola el array generado y cada uno de estos resultados.
+
+ ! Importante:
+   • Declaración de arrays: `int[] datos = new int[N];`
+   • Generación de aleatorios: `new Random().nextInt(100) + 1`
+   • Recorridos:
+     – Bucle for clásico para acumular suma, buscar max y min.
+     – Uso de `datos.length` para no salirse del array.
+   • Cálculo de la media: `(double) suma / N`
+   • Gestión de entradas:
+     – Controlar que N>0 con un bucle while o condicional.
+     – Capturar `NumberFormatException` si la entrada no es un número.
+
+ 🔁 Pasos sugeridos:
+   1️⃣ Pedir N al usuario y validar que sea mayor que cero.
+   2️⃣ Crear `int[] datos = new int[N];`
+   3️⃣ Rellenar el array con:
+        for (int i = 0; i < N; i++) {
+          datos[i] = rnd.nextInt(100) + 1;
+        }
+   4️⃣ Mostrar el array con `Arrays.toString(datos)`
+   5️⃣ Recorrer `datos` para:
+        – Acumular `suma += datos[i];`
+        – Actualizar `max = Math.max(max, datos[i]);`
+        – Actualizar `min = Math.min(min, datos[i]);`
+   6️⃣ Calcular `media = (double) suma / N`
+   7️⃣ Imprimir:
+        – Suma total
+        – Media con `printf("%.2f")`
+        – Valor máximo
+        – Valor mínimo
+
+ 🔧 Ejemplo de código dentro del método:
+   // Scanner sc = new Scanner(System.in);
+   // System.out.print("Tamaño N: ");
+   // int N = Integer.parseInt(sc.nextLine());
+   // int[] datos = new int[N];
+   // Random rnd = new Random();
+   // for (int i = 0; i < N; i++) datos[i] = rnd.nextInt(100) + 1;
+   // System.out.println("Array: " + Arrays.toString(datos));
+   // int suma = 0, max = datos[0], min = datos[0];
+   // for (int v : datos) {
+   //   suma += v;
+   //   if (v > max) max = v;
+   //   if (v < min) min = v;
+   // }
+   // double media = (double) suma / N;
+   // System.out.printf("Suma: %d | Media: %.2f | Máx: %d | Mín: %d%n", suma, media, max, min);
+*/
+// ➕ Opción 12: Ejercicio UT06 – Colecciones (List, Set y Repeticiones)
+/*
+ 📌 Enunciado:
+   Crea un método que trabaje con una lista de 20 números enteros aleatorios entre 1 y 10.
+   El método debe realizar las siguientes operaciones con colecciones:
+
+   1️⃣ Mostrar la lista original generada (con posibles repeticiones).
+   2️⃣ Ordenar y mostrar la lista de forma ascendente y descendente.
+   3️⃣ Crear un conjunto (Set) sin repeticiones a partir de la lista.
+   4️⃣ Detectar qué números se repitieron y cuáles no:
+       - Mostrar una lista de los números repetidos.
+       - Mostrar una lista de los números únicos (sin repeticiones).
+
+ ! Importante:
+   • List<Integer>: permite duplicados, mantiene orden de inserción.
+   • Set<Integer>: no permite duplicados, ignora repeticiones.
+   • Uso de:
+     – `Collections.sort(lista)` para ordenar ascendente.
+     – `Collections.sort(lista, Collections.reverseOrder())` para descendente.
+     – `Set<Integer> sinDuplicados = new HashSet<>(lista);`
+     – Map<Integer, Integer> para contar ocurrencias.
+   • Detección de elementos repetidos:
+     – Recorriendo la lista y guardando la frecuencia en un `HashMap<Integer, Integer>`.
+
+ 🔁 Pasos sugeridos:
+   1️⃣ Crear una `List<Integer> lista = new ArrayList<>();`
+   2️⃣ Rellenar la lista con 20 números aleatorios: `rnd.nextInt(10) + 1`
+   3️⃣ Mostrar la lista: `System.out.println(lista);`
+   4️⃣ Ordenar y mostrar ascendente / descendente.
+   5️⃣ Crear un `Set<Integer>` para eliminar duplicados y mostrarlo.
+   6️⃣ Crear un `Map<Integer, Integer>` donde:
+         – la clave sea el número,
+         – el valor sea cuántas veces aparece.
+   7️⃣ Usar este mapa para:
+         – Mostrar qué números tienen frecuencia > 1 (repetidos).
+         – Mostrar los que tienen frecuencia = 1 (únicos).
+
+ 🔧 Ejemplo de código base:
+   // List<Integer> lista = new ArrayList<>();
+   // Random rnd = new Random();
+   // for (int i = 0; i < 20; i++) lista.add(rnd.nextInt(10) + 1);
+   // System.out.println("Original: " + lista);
+   // Collections.sort(lista);
+   // System.out.println("Ascendente: " + lista);
+   // Collections.sort(lista, Collections.reverseOrder());
+   // System.out.println("Descendente: " + lista);
+   // Set<Integer> sinRepes = new HashSet<>(lista);
+   // System.out.println("Sin duplicados: " + sinRepes);
+   // Map<Integer, Integer> frecuencias = new HashMap<>();
+   // for (int num : lista) frecuencias.put(num, frecuencias.getOrDefault(num, 0) + 1);
+   // System.out.println("Repetidos:");
+   // for (Map.Entry<Integer, Integer> entry : frecuencias.entrySet()) {
+   //   if (entry.getValue() > 1) System.out.println(entry.getKey() + " → " + entry.getValue() + " veces");
+   // }
+   // System.out.println("Únicos:");
+   // for (Map.Entry<Integer, Integer> entry : frecuencias.entrySet()) {
+   //   if (entry.getValue() == 1) System.out.println(entry.getKey());
+   // }
+
+ ✅ Con este ejercicio practicarás:
+   • List, Set y Map de forma combinada
+   • Detección de duplicados
+   • Reforzar estructuras dinámicas sin índice
+   • Uso de `Collections.sort()` y `Map.Entry`
+   • Pensamiento algorítmico para contar y filtrar
+*/
 
 /*
  * 🧪 PRÁCTICA EXTRA: Validar que el nuevo nombre no exista ya
