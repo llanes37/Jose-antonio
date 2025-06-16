@@ -100,6 +100,7 @@ Este control permite evitar duplicados y garantizar la integridad del sistema.
 
 ```sql
 -- Cambiamos el delimitador para usar bloques BEGIN ... END
+-- Cambiamos el delimitador para usar bloques BEGIN ... END
 DELIMITER //
 
 CREATE PROCEDURE RegistrarCliente(
@@ -110,26 +111,31 @@ CREATE PROCEDURE RegistrarCliente(
     IN pEmail VARCHAR(100)       -- Correo electrónico del cliente
 )
 BEGIN
-    -- Declaramos una variable para saber si ya existe un cliente con ese DNI
     DECLARE existe INT;
 
-    -- Contamos los registros con ese mismo DNI
-    SELECT COUNT(*) INTO existe
-    FROM Clientes
-    WHERE DNI = pDNI;
-
-    -- Si no existe ningún cliente con ese DNI, insertamos el nuevo
-    IF existe = 0 THEN
-        INSERT INTO Clientes (Nombre, Apellido, DNI, Telefono, Email)
-        VALUES (pNombre, pApellido, pDNI, pTelefono, pEmail);
+    -- 1. Si el nombre es 'José Antonio', rechazamos la inserción directamente
+    IF pNombre = 'José Antonio' THEN
+        SELECT 'No se permiten registros con el nombre José Antonio.' AS Mensaje;
     ELSE
-        -- Si ya existe, mostramos un mensaje al usuario
-        SELECT 'El cliente ya existe en la base de datos.' AS Mensaje;
+        -- 2. Comprobamos si ya existe el DNI
+        SELECT COUNT(*) INTO existe
+        FROM Clientes
+        WHERE DNI = pDNI;
+
+        -- Si no existe, insertamos al cliente
+        IF existe = 0 THEN
+            INSERT INTO Clientes (Nombre, Apellido, DNI, Telefono, Email)
+            VALUES (pNombre, pApellido, pDNI, pTelefono, pEmail);
+        ELSE
+            -- Si ya existe, mostramos un mensaje
+            SELECT 'El cliente ya existe en la base de datos.' AS Mensaje;
+        END IF;
     END IF;
 END //
 
 -- Restauramos el delimitador original
 DELIMITER ;
+
 ```
 
 ---
@@ -143,14 +149,93 @@ DELIMITER ;
 
 ---
 
+## 🧾 Procedimiento Extra: RegistrarClienteSimple
+
+### 📄 Enunciado completo
+
+Crea un **procedimiento almacenado** llamado `RegistrarClienteSimple` que registre un nuevo cliente de forma simplificada.
+
+Este procedimiento debe:
+
+- Recibir **solo tres parámetros**: `Nombre`, `Apellido` y `DNI`.
+- Insertar un nuevo cliente usando únicamente esos campos.
+- Dejar los campos `Telefono` y `Email` con valor `NULL`.
+- Verificar si el cliente **ya existe** en la tabla `Clientes` mediante su `DNI`.
+- Si ya existe, mostrar el mensaje: `'El cliente ya está registrado.'`
+- Si no existe, insertar el nuevo cliente y guardar los datos mínimos.
+
+---
+
+### 🔧 Código del procedimiento con comentarios paso a paso
+
+```sql
+-- Cambiamos el delimitador para poder definir el procedimiento correctamente
+DELIMITER //
+
+CREATE PROCEDURE RegistrarClienteSimple(
+    IN pNombre VARCHAR(100),     -- Nombre del cliente
+    IN pApellido VARCHAR(100),   -- Apellido del cliente
+    IN pDNI VARCHAR(20)          -- DNI único del cliente
+)
+BEGIN
+    -- Declaramos una variable para comprobar si el DNI ya está registrado
+    DECLARE existe INT;
+
+    -- Contamos cuántos clientes tienen ese mismo DNI
+    SELECT COUNT(*) INTO existe
+    FROM Clientes
+    WHERE DNI = pDNI;
+
+    -- Si el cliente NO existe, lo insertamos con Teléfono y Email como NULL
+    IF existe = 0 THEN
+        INSERT INTO Clientes (Nombre, Apellido, DNI, Telefono, Email)
+        VALUES (pNombre, pApellido, pDNI, NULL, NULL);
+        SELECT '✅ Cliente registrado correctamente.' AS Mensaje;
+
+    -- Si ya existe, mostramos un mensaje
+    ELSE
+        SELECT '⚠️ El cliente ya está registrado.' AS Mensaje;
+    END IF;
+END //
+
+-- Restauramos el delimitador original
+DELIMITER ;
+```
+
+---
+
+### 💡 Explicación técnica
+
+- Se trabaja solo con los campos obligatorios: `Nombre`, `Apellido`, `DNI`.
+- `Telefono` y `Email` se insertan como `NULL` usando `VALUES (..., NULL, NULL)`.
+- Se controla la duplicidad mediante una consulta `SELECT COUNT(*)` filtrando por `DNI`.
+- Se usa un `IF` para insertar solo si no existe previamente.
+- Devuelve un mensaje diferente según el resultado de la operación.
+
+---
+
+### 🧪 Prueba sugerida
+
+```sql
+-- Prueba insertando un cliente nuevo
+CALL RegistrarClienteSimple('Mario', 'Ruiz', '77889900T');
+
+-- Prueba insertando el mismo DNI de nuevo
+CALL RegistrarClienteSimple('Mario', 'Ruiz', '77889900T');
+
+-- Consulta la tabla para ver el resultado
+SELECT * FROM Clientes WHERE DNI = '77889900T';
+```
+
+---
+
 ### 🎯 Tarea para ti
 
-Crea un nuevo procedimiento llamado `RegistrarClienteSimple` que:
+Crea una nueva versión del procedimiento llamada `RegistrarClienteNullSeguro` que además:
 
-- Reciba solo 3 parámetros: `Nombre`, `Apellido` y `DNI`.
-- Inserte un nuevo cliente usando esos campos.
-- Deje `Telefono` y `Email` como `NULL`.
-- También compruebe si el cliente ya existe como hicimos antes.
+- No permita insertar si el nombre o apellido vienen vacíos (`''`).
+- En caso de que alguno esté vacío, devuelva el mensaje: `'❌ Nombre y apellido son obligatorios.'`
+
 
 💡 Esto te permitirá practicar inserciones con campos opcionales y lógica de validación.
 
@@ -336,114 +421,334 @@ SELECT * FROM Habitaciones WHERE Tipo = 'Suite';
 
 ## 🔠 Ejercicio 4: Triggers para actualizar estado de habitaciones
 
-### 1. Agregar columna `Estado`:
+### 📄 Enunciado completo
+
+Vamos a automatizar el control del **estado de las habitaciones** en el hotel. Para ello, necesitas crear una columna y dos **triggers**.
+
+El objetivo es:
+
+- Cuando se **realiza una reserva**, la habitación debe pasar a estado `'Ocupada'`.
+- Cuando se **elimina una reserva**, la habitación debe volver a estar `'Disponible'`.
+
+Esto garantiza que siempre sepamos en qué estado se encuentra cada habitación sin hacerlo manualmente.
+
+---
+
+### 🔧 Paso 1: Añadir la columna `Estado` a la tabla `Habitaciones`
 
 ```sql
-ALTER TABLE Habitaciones ADD Estado VARCHAR(10) DEFAULT 'Disponible';
+ALTER TABLE Habitaciones
+ADD Estado VARCHAR(10) DEFAULT 'Disponible';
 ```
 
-### 2. Trigger tras insertar una reserva:
+📌 Esta columna indicará si la habitación está `Disponible`, `Ocupada`, `Limpieza`, etc.
+
+---
+
+### 🔧 Paso 2: Trigger que actualiza a 'Ocupada' al insertar una reserva
 
 ```sql
 CREATE TRIGGER ActualizarEstadoReserva
 AFTER INSERT ON Reservas
 FOR EACH ROW
 BEGIN
-    UPDATE Habitaciones SET Estado = 'Ocupada'
+    -- Al insertar una nueva reserva, cambiamos el estado a 'Ocupada'
+    UPDATE Habitaciones
+    SET Estado = 'Ocupada'
     WHERE HabitacionID = NEW.HabitacionID;
 END;
 ```
 
-### 3. Trigger tras eliminar una reserva:
+📌 `NEW.HabitacionID` se refiere a la habitación que se acaba de reservar.
+
+---
+
+### 🔧 Paso 3: Trigger que actualiza a 'Disponible' al eliminar una reserva
 
 ```sql
 CREATE TRIGGER ActualizarEstadoCancelacion
 AFTER DELETE ON Reservas
 FOR EACH ROW
 BEGIN
-    UPDATE Habitaciones SET Estado = 'Disponible'
+    -- Al cancelar una reserva, la habitación vuelve a estar disponible
+    UPDATE Habitaciones
+    SET Estado = 'Disponible'
     WHERE HabitacionID = OLD.HabitacionID;
 END;
 ```
 
-### 🔹 Tarea para ti
+📌 `OLD.HabitacionID` hace referencia a la habitación que estaba reservada antes de la eliminación.
 
-Crea un trigger que ponga la habitación como "Limpieza" si se actualiza la fecha de salida a una más temprana.
+---
+
+### 💡 Explicación técnica
+
+- `AFTER INSERT`: se ejecuta justo después de añadir una nueva reserva.
+- `AFTER DELETE`: se ejecuta justo después de eliminarla.
+- `NEW` y `OLD`: permiten acceder a los datos nuevos y antiguos en cada acción.
+- La lógica mantiene el estado de la habitación sincronizado con las reservas activas.
+
+---
+
+### 🎯 Tarea para ti
+
+Crea un **nuevo trigger** llamado `ActualizarEstadoLimpieza` que:
+
+- Se dispare **después de actualizar** una reserva (`AFTER UPDATE`).
+- Compare si la nueva `FechaSalida` es **menor** que la anterior (`OLD.FechaSalida`).
+- Si es así, actualice el estado de la habitación a `'Limpieza'`.
+
+💡 Esto simula el caso en el que un cliente se va antes de lo previsto y el personal de limpieza debe actuar.
+
+🧪 **Sugerencia de prueba para la tarea**:
+
+```sql
+-- Actualizamos una reserva para simular que el cliente se va antes
+UPDATE Reservas
+SET FechaSalida = '2024-06-16'
+WHERE ReservaID = 1;
+```
+
+Y luego consulta el estado:
+
+```sql
+SELECT Estado FROM Habitaciones WHERE HabitacionID = 1;
+```
+
+✅ Resultado esperado: `'Limpieza'`
+
 
 ---
 
 ## ⚠️ Ejercicio 5: Trigger de disponibilidad preventiva
 
+### 📄 Enunciado completo
+
+Vamos a crear un **trigger de seguridad** que impida insertar una reserva si **la habitación ya está ocupada** durante las fechas seleccionadas.
+
+Este trigger actúa como una **última línea de defensa**, incluso si el procedimiento que inserta la reserva no ha hecho bien la comprobación.
+
+Debe:
+
+- Activarse **antes de insertar** (`BEFORE INSERT`) una nueva fila en la tabla `Reservas`.
+- Comprobar si las fechas de la nueva reserva se **solapan** con alguna ya existente para esa habitación.
+- Si hay conflicto, **impedir la inserción** mostrando un mensaje de error personalizado.
+
+---
+
+### 🔧 Código del trigger con comentarios paso a paso
+
 ```sql
+-- Trigger que se ejecuta antes de insertar una reserva
 CREATE TRIGGER VerificarDisponibilidad
 BEFORE INSERT ON Reservas
 FOR EACH ROW
 BEGIN
     DECLARE habitacion_ocupada INT;
+
+    -- Contamos cuántas reservas se solapan con la nueva
     SELECT COUNT(*) INTO habitacion_ocupada
     FROM Reservas
     WHERE NEW.HabitacionID = HabitacionID
-    AND (NEW.FechaEntrada BETWEEN FechaEntrada AND FechaSalida
-    OR NEW.FechaSalida BETWEEN FechaEntrada AND FechaSalida
-    OR FechaEntrada BETWEEN NEW.FechaEntrada AND NEW.FechaSalida);
+    AND (
+        NEW.FechaEntrada BETWEEN FechaEntrada AND FechaSalida OR
+        NEW.FechaSalida BETWEEN FechaEntrada AND FechaSalida OR
+        FechaEntrada BETWEEN NEW.FechaEntrada AND NEW.FechaSalida
+    );
 
+    -- Si hay alguna, impedimos la inserción lanzando un error
     IF habitacion_ocupada > 0 THEN
         SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'La habitación no está disponible para las fechas seleccionadas.';
+        SET MESSAGE_TEXT = '❌ La habitación no está disponible para las fechas seleccionadas.';
     END IF;
 END;
 ```
 
-### 💡 Explicación
+---
 
-* Este trigger impide que se inserte una reserva si hay conflicto de fechas.
+### 💡 Explicación técnica
 
-### 🔹 Tarea para ti
-
-Modifica este trigger para registrar en una tabla `ErroresReservas` los intentos fallidos de reserva.
+- `BEFORE INSERT`: se ejecuta justo **antes de insertar** una nueva reserva.
+- `NEW.FechaEntrada` y `NEW.FechaSalida`: son los valores que el usuario intenta insertar.
+- La condición `OR` busca **cualquier solapamiento de fechas**:
+  - Si la entrada o salida están entre una reserva existente, o si se solapan por completo.
+- `SIGNAL SQLSTATE '45000'`: lanza un error que detiene la operación.
 
 ---
 
-## 📆 Ejercicio 6: Reservar todas las disponibles para un cliente VIP
+### 🎯 Tarea para ti
+
+Modifica este trigger o crea uno nuevo que además de impedir la reserva:
+
+1. Inserte un **registro del intento fallido** en una tabla llamada `ErroresReservas`.
+2. Esta tabla debe contener:
+   - `ID` autoincremental
+   - `FechaIntento`
+   - `ClienteID`
+   - `HabitacionID`
+   - `FechaEntrada`
+   - `FechaSalida`
+   - `MensajeError`
+
+---
+
+### 🧪 Sugerencia de prueba
 
 ```sql
-CREATE PROCEDURE ReservarDisponiblesParaArtista(
-    IN pFechaEntrada DATE,
-    IN pFechaSalida DATE
+-- Intentamos insertar una reserva que se solapa con una existente
+INSERT INTO Reservas (ClienteID, HabitacionID, FechaEntrada, FechaSalida)
+VALUES (2, 1, '2024-06-16', '2024-06-18');
+```
+
+➡️ Resultado esperado: se lanza un error que impide el insert.
+
+---
+
+### 🛠️ Sugerencia para crear la tabla de errores
+
+```sql
+CREATE TABLE ErroresReservas (
+    ErrorID INT AUTO_INCREMENT PRIMARY KEY,
+    FechaIntento DATETIME,
+    ClienteID INT,
+    HabitacionID INT,
+    FechaEntrada DATE,
+    FechaSalida DATE,
+    MensajeError VARCHAR(255)
+);
+```
+
+Luego puedes practicar cómo usar `INSERT INTO ErroresReservas` dentro de un trigger combinado o procedimiento.
+
+## 🧪 Práctica Final: Gestión de cancelaciones y facturación
+
+### 🎯 Objetivo general
+
+Esta práctica final integra todo lo aprendido: procedimientos, triggers, validaciones, inserciones y control de estado.
+
+Simula el proceso real de:
+
+1. Cancelar una reserva por parte del cliente.
+2. Registrar la cancelación en una nueva tabla.
+3. Calcular el importe de la estancia.
+4. Actualizar el estado de la habitación a "Disponible".
+
+---
+
+### 🧱 Parte 1: Nueva tabla para registrar cancelaciones
+
+Crea una tabla llamada `Cancelaciones` que registre toda cancelación que se haga.
+
+```sql
+CREATE TABLE Cancelaciones (
+    CancelacionID INT AUTO_INCREMENT PRIMARY KEY,
+    ReservaID INT,
+    ClienteID INT,
+    HabitacionID INT,
+    FechaCancelacion DATE,
+    ImporteTotal DECIMAL(8,2),
+    FOREIGN KEY (ReservaID) REFERENCES Reservas(ReservaID)
+);
+```
+
+---
+
+### ⚙️ Parte 2: Crear un procedimiento `CancelarReserva`
+
+Este procedimiento debe:
+
+- Recibir como parámetros:
+  - `pReservaID`
+  - `pFechaCancelacion`
+- Buscar los datos asociados a la reserva (cliente, habitación, fechas).
+- Calcular el número de noches y el importe total.
+- Insertar un registro en la tabla `Cancelaciones`.
+- Eliminar la reserva de la tabla `Reservas`.
+
+```sql
+DELIMITER //
+
+CREATE PROCEDURE CancelarReserva(
+    IN pReservaID INT,
+    IN pFechaCancelacion DATE
 )
 BEGIN
-    DECLARE done INT DEFAULT 0;
-    DECLARE habID INT;
+    DECLARE vClienteID INT;
+    DECLARE vHabitacionID INT;
+    DECLARE vFechaEntrada DATE;
+    DECLARE vFechaSalida DATE;
+    DECLARE vPrecio DECIMAL(5,2);
+    DECLARE vDias INT;
+    DECLARE vImporteTotal DECIMAL(8,2);
 
-    DECLARE cursorHab CURSOR FOR
-    SELECT HabitacionID FROM Habitaciones WHERE HabitacionID NOT IN (
-        SELECT HabitacionID FROM Reservas
-        WHERE NOT (FechaSalida <= pFechaEntrada OR FechaEntrada >= pFechaSalida)
-    );
+    -- Obtenemos los datos de la reserva
+    SELECT ClienteID, HabitacionID, FechaEntrada, FechaSalida
+    INTO vClienteID, vHabitacionID, vFechaEntrada, vFechaSalida
+    FROM Reservas
+    WHERE ReservaID = pReservaID;
 
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+    -- Obtenemos el precio por noche
+    SELECT PrecioNoche INTO vPrecio
+    FROM Habitaciones
+    WHERE HabitacionID = vHabitacionID;
 
-    OPEN cursorHab;
-    loop_hab: LOOP
-        FETCH cursorHab INTO habID;
-        IF done THEN
-            LEAVE loop_hab;
-        END IF;
-        CALL RealizarReserva(1, habID, pFechaEntrada, pFechaSalida);
-    END LOOP;
-    CLOSE cursorHab;
+    -- Calculamos los días de estancia
+    SET vDias = DATEDIFF(vFechaSalida, vFechaEntrada);
+
+    -- Calculamos el importe total
+    SET vImporteTotal = vDias * vPrecio;
+
+    -- Insertamos en Cancelaciones
+    INSERT INTO Cancelaciones (ReservaID, ClienteID, HabitacionID, FechaCancelacion, ImporteTotal)
+    VALUES (pReservaID, vClienteID, vHabitacionID, pFechaCancelacion, vImporteTotal);
+
+    -- Eliminamos la reserva
+    DELETE FROM Reservas WHERE ReservaID = pReservaID;
+END //
+
+DELIMITER ;
+```
+
+---
+
+### 🧲 Parte 3: Trigger para actualizar estado al cancelar
+
+Crea un trigger que, **tras eliminar una reserva**, ponga el estado de la habitación a `'Disponible'`.
+
+```sql
+CREATE TRIGGER EstadoDisponibleTrasCancelacion
+AFTER DELETE ON Reservas
+FOR EACH ROW
+BEGIN
+    UPDATE Habitaciones
+    SET Estado = 'Disponible'
+    WHERE HabitacionID = OLD.HabitacionID;
 END;
 ```
 
-### 💡 Explicación
+---
 
-* Se usa un cursor para recorrer todas las habitaciones disponibles.
-* Se llama al procedimiento de reserva por cada habitación libre.
+### 📌 ¿Qué conceptos has repasado aquí?
 
-### 🔹 Tarea para ti
-
-Haz que este procedimiento devuelva un mensaje con el total de habitaciones reservadas para el artista.
+- `CREATE TABLE` con claves foráneas
+- `CREATE PROCEDURE` con múltiples variables y lógica
+- `SELECT INTO`, `DATEDIFF`, `SET`, `INSERT`, `DELETE`
+- Cálculo automático de importes
+- `CREATE TRIGGER` para mantener integridad del estado
 
 ---
 
-✉️ Fin de la práctica. Puedes probar todos los procedimientos en MySQL Workbench. Recuerda comentar cada prueba que hagas y modificar los valores para ver diferentes resultados.
+### 🎯 Tareas para ti
+
+1. Inserta una reserva con fechas de prueba para un cliente.
+2. Ejecuta `CALL CancelarReserva(ID_reserva, CURDATE());`
+3. Comprueba que:
+   - La reserva ha sido eliminada.
+   - La habitación vuelve a estar disponible.
+   - La cancelación aparece registrada con el importe correcto.
+4. Mejora el procedimiento para que devuelva el importe con un `SELECT`.
+
+---
+
+✉️ ¡Fin de la práctica! Si completaste todos los pasos, has repasado todos los conceptos clave del módulo.
+
